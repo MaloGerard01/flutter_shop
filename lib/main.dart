@@ -4,6 +4,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_shop/home.dart';
 import 'package:provider/provider.dart';
 
+import 'account.dart';
+import 'cart.dart';
+
 void main() {
   runApp(MyApp());
 }
@@ -39,10 +42,13 @@ class _MyHomePageState extends State<MyHomePage> {
     Widget page;
     switch (selectedIndex) {
       case 0:
-        page = GeneratorPage();
+        page = HomePage();
         break;
       case 1:
-        page = HomePage();
+        page = AccountPage();
+        break;
+      case 2:
+        page = CartPage();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -60,8 +66,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   label: Text('Home'),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.favorite),
-                  label: Text('Favorites'),
+                  icon: Icon(Icons.people),
+                  label: Text('Account'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.shopping_cart),
+                  label: Text('Cart'),
                 ),
               ],
               selectedIndex: selectedIndex,
@@ -146,6 +156,10 @@ class MyAppState extends ChangeNotifier {
       favorites.add(current);
     }
     notifyListeners();
+  }
+
+  void addToCart(item) {
+    debugPrint(item);
   }
 }
 
