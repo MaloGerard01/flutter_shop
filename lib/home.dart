@@ -1,124 +1,120 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:flutter_shop/product.dart';
 import 'package:provider/provider.dart';
 
 import 'main.dart';
+import 'dart:math';
 
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var pair = appState.current;
-    const title = 'Grid List';
+    const title = 'Product List';
+
+    late Future<List<Product>> futureProducts;
+    futureProducts = fetchProducts();
 
     IconData icon;
-    if (appState.favorites.contains(pair)) {
-      icon = Icons.favorite;
-    } else {
-      icon = Icons.favorite_border;
-    }
+    icon = Icons.shopping_basket;
+
+    final currentCount = (MediaQuery.of(context).size.width ~/ 400).toInt();
+
+    final imgHeight = (MediaQuery.of(context).size.height ~/ 8).toDouble();
+    final imgWidth = (MediaQuery.of(context).size.width ~/ 2).toDouble();
+
+    final minCount = 1;
 
     return MaterialApp(
       title: title,
       home: Scaffold(
-        body: GridView.count(
-          // Create a grid with 2 columns. If you change the scrollDirection to
-          // horizontal, this produces 2 rows.
-          crossAxisCount: 2,
-          // Generate 100 widgets that display their index in the List.
-          children: List.generate(20, (index) {
-            return Center(
-              child: Card(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    const ListTile(
-                      title: Text('The Enchanted Nightingale'),
-                      subtitle:
-                          Text('Music by Julie Gable. Lyrics by Sidney Stein.'),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            appState.addToCart("test");
-                          },
-                          icon: Icon(icon),
-                          label: Text('Ajouter'),
-                        ),
-                        SizedBox(width: 10),
-                        // ElevatedButton(
-                        //   onPressed: () {
-                        //     appState.getNext();
-                        //   },
-                        //   child: Text('Next'),
-                        // ),
-                      ],
-                    ),
-                    // Row(
-                    //   mainAxisAlignment: MainAxisAlignment.center,
-                    //   children: <Widget>[
-                    //     TextButton(
-                    //       child: const Text('BUY TICKETS'),
-                    //       onPressed: () {/* ... */},
-                    //     ),
-                    //     const SizedBox(width: 8),
-                    //     TextButton(
-                    //       child: const Text('LISTEN'),
-                    //       onPressed: () {/* ... */},
-                    //     ),
-                    //     const SizedBox(width: 8),
-                    //   ],
-                    // ),
-                  ],
-                ),
-              ),
-            );
-          }),
+        body: FutureBuilder<List<Product>>(
+          future: futureProducts,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return GridView.builder(
+                  itemCount: snapshot.data?.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: max(currentCount, minCount),
+                    childAspectRatio: 1,
+                    crossAxisSpacing: 4,
+                    mainAxisSpacing: 4,
+                  ),
+                  itemBuilder: (context, index) => Center(
+                      child: Card(
+                          child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                minHeight: 300,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image(
+                                    width: imgWidth,
+                                    height: imgHeight,
+                                    image: NetworkImage(
+                                        snapshot.data![index].thumbnail),
+                                  ),
+                                  Text(
+                                    snapshot.data![index].category
+                                        .toCapitalized(),
+                                  ),
+                                  ListTile(
+                                    title: Text(
+                                        snapshot.data![index].title
+                                            .toTitleCase(),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis),
+                                    subtitle: Text(
+                                        snapshot.data![index].description,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis),
+                                  ),
+                                  RatingBarIndicator(
+                                    rating:
+                                        snapshot.data![index].rating.toDouble(),
+                                    itemBuilder: (context, index) => const Icon(
+                                      Icons.star,
+                                      color: Colors.amber,
+                                    ),
+                                    itemCount: 5,
+                                    itemSize: 30.0,
+                                    direction: Axis.horizontal,
+                                  ),
+                                  // SizedBox(height: 10),
+                                  Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: Expanded(
+                                          child: Row(
+                                        mainAxisSize: MainAxisSize.max,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            "${snapshot.data![index].price} €",
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          IconButton(
+                                            onPressed: () {
+                                              appState.addToCart(
+                                                  snapshot.data![index]);
+                                            },
+                                            icon: Icon(icon),
+                                          ),
+                                        ],
+                                      ))),
+                                ],
+                              )))));
+            } else if (snapshot.hasError) {
+              return const Text(
+                  "An error has occured, please try again later !");
+            }
+            return const Center(child: CircularProgressIndicator());
+          },
         ),
       ),
     );
   }
-  // @override
-  // Widget build(BuildContext context) {
-  //   var appState = context.watch<MyAppState>();
-  //   var pair = appState.current;
-
-  //   IconData icon;
-  //   if (appState.favorites.contains(pair)) {
-  //     icon = Icons.favorite;
-  //   } else {
-  //     icon = Icons.favorite_border;
-  //   }
-
-  //   return Center(
-  //     child: Column(
-  //       mainAxisAlignment: MainAxisAlignment.center,
-  //       children: [
-  //         BigCard(pair: pair),
-  //         SizedBox(height: 10),
-  //         Row(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             ElevatedButton.icon(
-  //               onPressed: () {
-  //                 appState.toggleFavorite();
-  //               },
-  //               icon: Icon(icon),
-  //               label: Text('Test'),
-  //             ),
-  //             SizedBox(width: 10),
-  //             ElevatedButton(
-  //               onPressed: () {
-  //                 appState.getNext();
-  //               },
-  //               child: Text('Next'),
-  //             ),
-  //           ],
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 }
